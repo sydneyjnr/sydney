@@ -4,6 +4,8 @@ export type ChatMessage = {
   id: string;
   role: ChatRole;
   content: string;
+  isError?: boolean;
+  retryPrompt?: string;
 };
 
 export type Conversation = {
@@ -132,26 +134,4 @@ export function getConversationTitle(content: string) {
 
 export function createChatId(prefix: "conversation" | "message") {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-}
-
-export function getDemoReply(prompt: string) {
-  const normalized = prompt.toLowerCase();
-
-  if (/(calm|evening|morning|routine|sleep|wind down|unwind|switch off)/.test(normalized)) {
-    return "Here is a gentle shape for the evening:\n\n1. Dim the lights and put your phone out of reach for twenty minutes.\n2. Pick one small reset: a shower, a tidy surface, or a short walk.\n3. Write down anything still circling in your head so tomorrow has a place to start.\n4. End with something low-effort: a few pages, quiet music, or a gentle stretch.\n\nIf you tell me what your evenings usually look like, we can make this more realistic.";
-  }
-
-  if (/(idea|brainstorm|creative|project|weekend|fun)/.test(normalized)) {
-    return "A few directions worth exploring:\n\n- Make the smallest useful version and see what it teaches you.\n- Combine two things you already like instead of starting from a blank page.\n- Give yourself a deliberately odd constraint. It often makes the next idea easier to find.\n- Set a ten-minute timer and stop when it rings, even if you are on a roll.\n\nTell me a little more about what you are making, and I can help you turn one of these into a concrete next step.";
-  }
-
-  if (/(explain|understand|how does|what is|why does|learn)/.test(normalized)) {
-    return "A simple way to make almost any big idea easier to understand:\n\n1. Say it in one sentence without jargon.\n2. Compare it to something ordinary.\n3. Walk through one concrete example.\n4. Name the one limitation worth remembering.\n\nIf you tell me the idea, I can walk through that structure with you.";
-  }
-
-  if (/(decision|choose|choice|work|stuck|problem|perspective)/.test(normalized)) {
-    return "Try looking at it in three voices:\n\n- The friend: what would you tell someone else in this position?\n- The future self: what will matter in six months?\n- The outsider: what would someone with no history here notice first?\n\nThe gap between those answers is usually where the useful perspective is hiding. If you share the situation, I can help you try each voice.";
-  }
-
-  return "I am here with you. Let us make this easier to hold.\n\nStart with the honest version rather than the polished one: what feels most important about it right now? I can help you untangle the next step, turn it into a plan, or simply think out loud.\n\nThis is a simulated reply, but the conversation flow is fully interactive.";
 }

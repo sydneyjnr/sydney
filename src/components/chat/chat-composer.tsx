@@ -67,7 +67,7 @@ export function ChatComposer({
               Enter to send · Shift + Enter for a new line
             </p>
             <p className="pl-1.5 text-[11px] text-muted-foreground sm:hidden">
-              Simulated demo
+              {isSending ? "Thinking..." : "Session only"}
             </p>
             <Button
               type="submit"
@@ -81,7 +81,8 @@ export function ChatComposer({
           </div>
         </div>
         <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          Demo experience. Replies are simulated locally and are not saved.
+          AI-generated replies may be inaccurate. Only your latest message is
+          sent, and conversations reset on refresh.
         </p>
       </form>
     </footer>

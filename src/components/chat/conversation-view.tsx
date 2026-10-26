@@ -1,19 +1,26 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { Sparkles } from "lucide-react";
+import { CircleAlert, RotateCcw, Sparkles } from "lucide-react";
 
+import { Button } from "@/components/ui/button";
 import type { ChatMessage, Conversation } from "@/lib/chat";
 import { cn } from "@/lib/utils";
 
 type ConversationViewProps = {
   conversation: Conversation;
   isPending: boolean;
+  onRetry: (
+    conversationId: string,
+    errorMessageId: string,
+    prompt: string,
+  ) => void;
 };
 
 export function ConversationView({
   conversation,
   isPending,
+  onRetry,
 }: ConversationViewProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
   const messageCount = conversation.messages.length;
@@ -35,7 +42,14 @@ export function ConversationView({
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-5">
           {conversation.messages.map((message) => (
-            <MessageBubble key={message.id} message={message} />
+            <MessageBubble
+              key={message.id}
+              message={message}
+              isPending={isPending}
+              onRetry={(errorMessageId, prompt) =>
+                onRetry(conversation.id, errorMessageId, prompt)
+              }
+            />
           ))}
           {isPending ? <TypingIndicator /> : null}
         </div>
@@ -45,24 +59,73 @@ export function ConversationView({
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({
+  message,
+  isPending,
+  onRetry,
+}: {
+  message: ChatMessage;
+  isPending: boolean;
+  onRetry: (messageId: string, prompt: string) => void;
+}) {
   const isUser = message.role === "user";
+  const isError = !isUser && message.isError;
 
   return (
     <article
-      aria-label={isUser ? "Your message" : "AI Companion message"}
+      role={isError ? "alert" : undefined}
+      aria-label={
+        isUser
+          ? "Your message"
+          : isError
+            ? "AI Companion error"
+            : "AI Companion message"
+      }
       className={cn("flex items-start gap-3", isUser && "justify-end")}
     >
-      {!isUser ? <CompanionAvatar /> : null}
+      {!isUser ? (
+        isError ? (
+          <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-destructive ring-1 ring-destructive/20">
+            <CircleAlert className="size-4" />
+          </div>
+        ) : (
+          <CompanionAvatar />
+        )
+      ) : null}
       <div
         className={cn(
           "max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed break-words sm:max-w-[78%]",
           isUser
             ? "rounded-br-md bg-primary text-primary-foreground"
-            : "rounded-bl-md bg-secondary text-secondary-foreground ring-1 ring-border",
+            : isError
+              ? "rounded-bl-md bg-destructive/5 text-foreground ring-1 ring-destructive/25"
+              : "rounded-bl-md bg-secondary text-secondary-foreground ring-1 ring-border",
         )}
       >
-        <p className="whitespace-pre-wrap">{message.content}</p>
+        {isError ? (
+          <>
+            <p className="flex items-center gap-1.5 text-xs font-medium text-destructive">
+              <CircleAlert className="size-3.5" />
+              Response failed
+            </p>
+            <p className="mt-1.5 whitespace-pre-wrap">{message.content}</p>
+            {message.retryPrompt && onRetry ? (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                disabled={isPending}
+                onClick={() => onRetry(message.id, message.retryPrompt!)}
+                className="mt-3 h-8 bg-background/70"
+              >
+                <RotateCcw className="size-3.5" />
+                Try again
+              </Button>
+            ) : null}
+          </>
+        ) : (
+          <p className="whitespace-pre-wrap">{message.content}</p>
+        )}
       </div>
     </article>
   );

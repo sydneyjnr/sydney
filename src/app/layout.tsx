@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "AI Companion",
   description:
-    "A calm, responsive AI companion interface with a local frontend demo.",
+    "A calm, responsive AI companion for thinking, planning, and everyday questions.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

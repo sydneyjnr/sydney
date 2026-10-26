@@ -58,11 +58,11 @@ export function ChatSidebar({
             <TooltipTrigger asChild>
               <span className="flex size-8 items-center justify-center">
                 <span className="size-2 rounded-full bg-primary" />
-                <span className="sr-only">Frontend demo</span>
+                <span className="sr-only">AI chat</span>
               </span>
             </TooltipTrigger>
             <TooltipContent side="right">
-              Local demo with simulated replies
+              AI chat with session-only history
             </TooltipContent>
           </Tooltip>
         </div>
@@ -115,7 +115,7 @@ export function ChatSidebar({
           Sample chats
         </span>
         <span className="rounded-full bg-background/70 px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground ring-1 ring-sidebar-border">
-          Demo
+          Examples
         </span>
       </div>
 
@@ -167,10 +167,10 @@ export function ChatSidebar({
         <div className="mb-2 rounded-xl border border-sidebar-border bg-background/55 p-3">
           <div className="flex items-center gap-2">
             <span className="size-1.5 rounded-full bg-primary" />
-            <p className="text-xs font-medium">Frontend demo</p>
+            <p className="text-xs font-medium">Session only</p>
           </div>
           <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
-            Replies are simulated. Conversations reset when you refresh.
+            AI replies may be inaccurate. Conversations reset when you refresh.
           </p>
         </div>
         <div

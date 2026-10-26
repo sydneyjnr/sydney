@@ -18,13 +18,50 @@ import {
   createChatId,
   demoConversations,
   getConversationTitle,
-  getDemoReply,
   type ChatMessage,
   type Conversation,
 } from "@/lib/chat";
 import { cn } from "@/lib/utils";
 
-const DEMO_REPLY_DELAY = 900;
+class ChatRequestError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ChatRequestError";
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function getReply(payload: unknown) {
+  if (!isRecord(payload) || typeof payload.reply !== "string") {
+    return null;
+  }
+
+  const reply = payload.reply.trim();
+  return reply || null;
+}
+
+function getRouteErrorMessage(payload: unknown, status: number) {
+  if (
+    isRecord(payload) &&
+    typeof payload.error === "string" &&
+    payload.error.trim()
+  ) {
+    return payload.error;
+  }
+
+  if (status === 429) {
+    return "The AI service is busy right now. Please wait a moment and try again.";
+  }
+
+  if (status >= 500) {
+    return "The AI service is temporarily unavailable. Please try again.";
+  }
+
+  return "The request could not be completed. Please try again.";
+}
 
 export function ChatShell() {
   const [conversations, setConversations] =
@@ -39,20 +76,24 @@ export function ChatShell() {
   const [pendingConversationIds, setPendingConversationIds] = useState<
     string[]
   >([]);
+  const activeConversationIdRef = useRef<string | null>(null);
   const pendingIdsRef = useRef<Set<string>>(new Set());
-  const timersRef = useRef<Map<string, number>>(new Map());
+  const abortControllersRef = useRef<Map<string, AbortController>>(new Map());
+  const isMountedRef = useRef(true);
 
   const syncPendingState = useCallback(() => {
     setPendingConversationIds(Array.from(pendingIdsRef.current));
   }, []);
 
   useEffect(() => {
-    const timers = timersRef.current;
+    isMountedRef.current = true;
+    const controllers = abortControllersRef.current;
     const pendingIds = pendingIdsRef.current;
 
     return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
-      timers.clear();
+      isMountedRef.current = false;
+      controllers.forEach((controller) => controller.abort());
+      controllers.clear();
       pendingIds.clear();
     };
   }, []);
@@ -78,6 +119,93 @@ export function ChatShell() {
     ? pendingConversationIds.includes(activeConversation.id)
     : false;
 
+  function appendMessage(conversationId: string, message: ChatMessage) {
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === conversationId
+          ? {
+              ...conversation,
+              messages: [...conversation.messages, message],
+              updatedAt: "Now",
+            }
+          : conversation,
+      ),
+    );
+  }
+
+  async function requestAssistantReply(conversationId: string, prompt: string) {
+    if (pendingIdsRef.current.has(conversationId)) {
+      return;
+    }
+
+    const controller = new AbortController();
+    abortControllersRef.current.set(conversationId, controller);
+    pendingIdsRef.current.add(conversationId);
+    syncPendingState();
+
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: prompt }),
+        signal: controller.signal,
+      });
+
+      const payload: unknown = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new ChatRequestError(
+          getRouteErrorMessage(payload, response.status),
+        );
+      }
+
+      const reply = getReply(payload);
+
+      if (!reply) {
+        throw new ChatRequestError(
+          "The AI service returned an empty response. Please try again.",
+        );
+      }
+
+      if (controller.signal.aborted || !isMountedRef.current) {
+        return;
+      }
+
+      appendMessage(conversationId, {
+        id: createChatId("message"),
+        role: "assistant",
+        content: reply,
+      });
+    } catch (error) {
+      if (controller.signal.aborted || !isMountedRef.current) {
+        return;
+      }
+
+      const errorMessage =
+        error instanceof ChatRequestError
+          ? error.message
+          : "Could not reach the AI service. Check your connection and try again.";
+
+      appendMessage(conversationId, {
+        id: createChatId("message"),
+        role: "assistant",
+        content: errorMessage,
+        isError: true,
+        retryPrompt: prompt,
+      });
+    } finally {
+      abortControllersRef.current.delete(conversationId);
+      pendingIdsRef.current.delete(conversationId);
+
+      if (isMountedRef.current) {
+        syncPendingState();
+      }
+    }
+  }
+
   function handleSend(value: string) {
     const content = value.trim();
 
@@ -85,7 +213,8 @@ export function ChatShell() {
       return;
     }
 
-    const targetId = activeConversationId ?? createChatId("conversation");
+    const targetId =
+      activeConversationIdRef.current ?? createChatId("conversation");
 
     if (pendingIdsRef.current.has(targetId)) {
       return;
@@ -125,45 +254,46 @@ export function ChatShell() {
       );
     });
 
+    activeConversationIdRef.current = targetId;
     setActiveConversationId(targetId);
     setDraft("");
-    pendingIdsRef.current.add(targetId);
-    syncPendingState();
+    void requestAssistantReply(targetId, content);
+  }
 
-    const timer = window.setTimeout(() => {
-      const reply: ChatMessage = {
-        id: createChatId("message"),
-        role: "assistant",
-        content: getDemoReply(content),
-      };
+  function handleRetry(
+    conversationId: string,
+    errorMessageId: string,
+    prompt: string,
+  ) {
+    if (pendingIdsRef.current.has(conversationId)) {
+      return;
+    }
 
-      setConversations((current) =>
-        current.map((conversation) =>
-          conversation.id === targetId
-            ? {
-                ...conversation,
-                messages: [...conversation.messages, reply],
-                updatedAt: "Now",
-              }
-            : conversation,
-        ),
-      );
+    setConversations((current) =>
+      current.map((conversation) =>
+        conversation.id === conversationId
+          ? {
+              ...conversation,
+              messages: conversation.messages.filter(
+                (message) => message.id !== errorMessageId,
+              ),
+            }
+          : conversation,
+      ),
+    );
 
-      pendingIdsRef.current.delete(targetId);
-      syncPendingState();
-      timersRef.current.delete(targetId);
-    }, DEMO_REPLY_DELAY);
-
-    timersRef.current.set(targetId, timer);
+    void requestAssistantReply(conversationId, prompt);
   }
 
   function handleNewChat() {
+    activeConversationIdRef.current = null;
     setActiveConversationId(null);
     setDraft("");
     setIsMobileSidebarOpen(false);
   }
 
   function handleSelectConversation(id: string) {
+    activeConversationIdRef.current = id;
     setActiveConversationId(id);
     setDraft("");
     setIsMobileSidebarOpen(false);
@@ -202,6 +332,7 @@ export function ChatShell() {
             <ConversationView
               conversation={activeConversation}
               isPending={isReplyPending}
+              onRetry={handleRetry}
             />
           ) : (
             <div className="h-full overflow-y-auto">
