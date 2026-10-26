@@ -41,11 +41,13 @@ export function ConversationView({
     >
       <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6 sm:py-10">
         <div className="flex flex-col gap-5">
-          {conversation.messages.map((message) => (
+          {conversation.messages.map((message, index) => (
             <MessageBubble
               key={message.id}
               message={message}
               isPending={isPending}
+              canRetry={conversation.usage.canSend}
+              isLastMessage={index === conversation.messages.length - 1}
               onRetry={(errorMessageId, prompt) =>
                 onRetry(conversation.id, errorMessageId, prompt)
               }
@@ -62,10 +64,14 @@ export function ConversationView({
 function MessageBubble({
   message,
   isPending,
+  canRetry,
+  isLastMessage,
   onRetry,
 }: {
   message: ChatMessage;
   isPending: boolean;
+  canRetry: boolean;
+  isLastMessage: boolean;
   onRetry: (messageId: string, prompt: string) => void;
 }) {
   const isUser = message.role === "user";
@@ -109,7 +115,7 @@ function MessageBubble({
               Response failed
             </p>
             <p className="mt-1.5 whitespace-pre-wrap">{message.content}</p>
-            {message.retryPrompt && onRetry ? (
+            {message.retryPrompt && isLastMessage && canRetry ? (
               <Button
                 type="button"
                 variant="outline"

@@ -1,3 +1,5 @@
+import { createEmptyTokenUsage, type TokenUsage } from "@/lib/token-budget";
+
 export type ChatRole = "user" | "assistant";
 
 export type ChatMessage = {
@@ -6,6 +8,7 @@ export type ChatMessage = {
   content: string;
   isError?: boolean;
   retryPrompt?: string;
+  excludeFromHistory?: boolean;
 };
 
 export type Conversation = {
@@ -13,7 +16,10 @@ export type Conversation = {
   title: string;
   messages: ChatMessage[];
   updatedAt: string;
+  usage: TokenUsage;
 };
+
+export const MAX_CONVERSATION_TITLE_LENGTH = 80;
 
 export const starterPrompts = [
   {
@@ -47,6 +53,7 @@ export const demoConversations: Conversation[] = [
     id: "demo-morning",
     title: "A calmer start to the day",
     updatedAt: "12m",
+    usage: createEmptyTokenUsage(),
     messages: [
       {
         id: "demo-morning-1",
@@ -65,6 +72,7 @@ export const demoConversations: Conversation[] = [
     id: "demo-decision",
     title: "Untangling a work decision",
     updatedAt: "1h",
+    usage: createEmptyTokenUsage(),
     messages: [
       {
         id: "demo-decision-1",
@@ -84,6 +92,7 @@ export const demoConversations: Conversation[] = [
     id: "demo-weekend",
     title: "Ideas for a rainy weekend",
     updatedAt: "Yesterday",
+    usage: createEmptyTokenUsage(),
     messages: [
       {
         id: "demo-weekend-1",
@@ -102,6 +111,7 @@ export const demoConversations: Conversation[] = [
     id: "demo-letter",
     title: "A note I have been meaning to write",
     updatedAt: "2d",
+    usage: createEmptyTokenUsage(),
     messages: [
       {
         id: "demo-letter-1",
@@ -130,6 +140,14 @@ export function getConversationTitle(content: string) {
   }
 
   return `${normalized.slice(0, 41).trimEnd()}…`;
+}
+
+export function normalizeConversationTitle(value: string) {
+  return value
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, MAX_CONVERSATION_TITLE_LENGTH)
+    .trimEnd();
 }
 
 export function createChatId(prefix: "conversation" | "message") {
