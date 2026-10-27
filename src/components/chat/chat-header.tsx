@@ -63,14 +63,14 @@ export function ChatHeader({
       <div className="min-w-0 pl-1">
         <p className="truncate text-sm font-medium">{title}</p>
         <p className="hidden text-xs text-muted-foreground sm:block">
-          AI chat · session only
+          Sydney · session only
         </p>
       </div>
 
       <div className="ml-auto flex items-center gap-1.5">
         <span className="hidden items-center gap-1.5 rounded-full border border-border bg-muted/40 px-2.5 py-1 text-[11px] font-medium text-muted-foreground sm:inline-flex">
           <span className="size-1.5 rounded-full bg-primary" />
-          Live AI
+          Online
         </span>
         <ThemeToggle />
       </div>

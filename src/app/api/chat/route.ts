@@ -28,7 +28,8 @@ const GROQ_TIMEOUT_MS = 30_000;
 const MAX_TRACKED_CONVERSATIONS = 1_000;
 const CONVERSATION_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9_-]{0,99}$/;
 
-const SYSTEM_INSTRUCTION = `You are AI Companion, a friendly and thoughtful personal assistant.
+const SYSTEM_INSTRUCTION = `You are Sydney, a friendly and thoughtful personal assistant.
+Refer to yourself as Sydney when it is natural to do so.
 Help the user answer questions clearly, understand technical concepts, brainstorm, plan, write, and solve problems.
 Break complicated explanations into manageable steps when useful.
 Be warm, natural, and respectful without being excessively verbose.

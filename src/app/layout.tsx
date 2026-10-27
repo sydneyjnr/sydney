@@ -15,9 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AI Companion",
+  title: "Sydney",
+  applicationName: "Sydney",
   description:
-    "A calm, responsive AI companion for thinking, planning, and everyday questions.",
+    "Sydney is a thoughtful AI assistant for thinking, planning, and working through everyday questions.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

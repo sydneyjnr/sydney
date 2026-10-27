@@ -139,9 +139,9 @@ export function ChatComposer({
             placeholder={
               isBudgetExhausted
                 ? "Start a new chat to continue..."
-                : "Message your companion..."
+                : "Message Sydney..."
             }
-            aria-label="Message your companion"
+            aria-label="Message Sydney"
             aria-describedby="conversation-token-budget"
             disabled={isBudgetExhausted}
             maxLength={4_000}
@@ -171,8 +171,11 @@ export function ChatComposer({
           </div>
         </div>
         <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          AI-generated replies may be inaccurate. Conversation history is sent
-          to the model, and chats reset on refresh.
+          Sydney is not always correct. Verify important information.
+        </p>
+        <p className="mt-1 text-center text-[10px] text-muted-foreground/80">
+          Conversation history is sent to the model. Conversations reset on
+          refresh.
         </p>
       </form>
     </footer>

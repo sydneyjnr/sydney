@@ -84,8 +84,8 @@ function MessageBubble({
         isUser
           ? "Your message"
           : isError
-            ? "AI Companion error"
-            : "AI Companion message"
+            ? "Sydney error"
+            : "Sydney message"
       }
       className={cn("flex items-start gap-3", isUser && "justify-end")}
     >
@@ -95,7 +95,7 @@ function MessageBubble({
             <CircleAlert className="size-4" />
           </div>
         ) : (
-          <CompanionAvatar />
+          <SydneyAvatar />
         )
       ) : null}
       <div
@@ -140,12 +140,12 @@ function MessageBubble({
 function TypingIndicator() {
   return (
     <div className="flex items-start gap-3">
-      <CompanionAvatar />
+      <SydneyAvatar />
       <div
         role="status"
         className="flex min-h-11 items-center rounded-2xl rounded-bl-md bg-secondary px-4 py-3 ring-1 ring-border"
       >
-        <span className="sr-only">AI Companion is thinking</span>
+        <span className="sr-only">Sydney is thinking</span>
         <span aria-hidden="true" className="flex items-center gap-1">
           <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:-0.3s] motion-reduce:animate-none" />
           <span className="size-1.5 animate-bounce rounded-full bg-muted-foreground/60 [animation-delay:-0.15s] motion-reduce:animate-none" />
@@ -156,7 +156,7 @@ function TypingIndicator() {
   );
 }
 
-function CompanionAvatar() {
+function SydneyAvatar() {
   return (
     <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary ring-1 ring-primary/20">
       <Sparkles className="size-4" />

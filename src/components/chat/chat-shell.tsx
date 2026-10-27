@@ -26,7 +26,6 @@ import {
 } from "@/components/ui/sheet";
 import {
   createChatId,
-  demoConversations,
   getConversationTitle,
   normalizeConversationTitle,
   type ChatMessage,
@@ -183,8 +182,7 @@ function buildRequestMessages(
 }
 
 export function ChatShell() {
-  const [conversations, setConversations] =
-    useState<Conversation[]>(demoConversations);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
   >(null);
@@ -197,7 +195,7 @@ export function ChatShell() {
   >([]);
   const [deleteCandidate, setDeleteCandidate] =
     useState<Conversation | null>(null);
-  const conversationsRef = useRef<Conversation[]>(demoConversations);
+  const conversationsRef = useRef<Conversation[]>([]);
   const activeConversationIdRef = useRef<string | null>(null);
   const pendingIdsRef = useRef<Set<string>>(new Set());
   const abortControllersRef = useRef<Map<string, AbortController>>(new Map());

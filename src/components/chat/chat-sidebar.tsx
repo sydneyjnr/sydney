@@ -126,11 +126,11 @@ export function ChatSidebar({
             <TooltipTrigger asChild>
               <span className="flex size-8 items-center justify-center">
                 <span className="size-2 rounded-full bg-primary" />
-                <span className="sr-only">AI chat</span>
+                <span className="sr-only">Sydney</span>
               </span>
             </TooltipTrigger>
             <TooltipContent side="right">
-              AI chat with session-only history
+              Sydney with session-only history
             </TooltipContent>
           </Tooltip>
         </div>
@@ -145,7 +145,7 @@ export function ChatSidebar({
           <Sparkles className="size-5" />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold">AI Companion</p>
+          <p className="truncate text-sm font-semibold">Sydney</p>
           <p className="truncate text-xs text-muted-foreground">
             A calmer place to think
           </p>
@@ -337,7 +337,8 @@ export function ChatSidebar({
             <p className="text-xs font-medium">Session only</p>
           </div>
           <p className="mt-1 text-[11px] leading-4 text-muted-foreground">
-            AI replies may be inaccurate. Conversations reset when you refresh.
+            Sydney keeps conversations in this browser session. They reset when
+            you refresh.
           </p>
         </div>
         <div
