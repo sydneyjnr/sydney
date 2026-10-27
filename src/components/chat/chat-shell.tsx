@@ -802,15 +802,16 @@ export function ChatShell() {
           onSelectConversation={handleSelectConversation}
           onRenameConversation={handleRenameConversation}
           onDeleteConversation={handleRequestDeleteConversation}
+          onToggleSidebar={() =>
+            setIsSidebarCollapsed((current) => !current)
+          }
         />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
         <ChatHeader
-          title={activeConversation?.title ?? "New conversation"}
-          isSidebarCollapsed={isSidebarCollapsed}
+          title={activeConversation?.title}
           onOpenMobileSidebar={() => setIsMobileSidebarOpen(true)}
-          onToggleSidebar={() => setIsSidebarCollapsed((current) => !current)}
         />
 
         <main className="min-h-0 flex-1 overflow-hidden">
