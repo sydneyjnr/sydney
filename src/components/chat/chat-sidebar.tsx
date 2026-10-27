@@ -5,6 +5,8 @@ import {
   Check,
   MessageSquare,
   MoreHorizontal,
+  PanelLeftClose,
+  PanelLeftOpen,
   Pencil,
   Plus,
   Search,
@@ -45,6 +47,7 @@ type ChatSidebarProps = {
   onSelectConversation: (id: string) => void;
   onRenameConversation: (id: string, title: string) => void;
   onDeleteConversation: (conversation: Conversation) => void;
+  onToggleSidebar?: () => void;
 };
 
 export function ChatSidebar({
@@ -57,6 +60,7 @@ export function ChatSidebar({
   onSelectConversation,
   onRenameConversation,
   onDeleteConversation,
+  onToggleSidebar,
 }: ChatSidebarProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
@@ -105,6 +109,25 @@ export function ChatSidebar({
         <div className="flex size-10 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
           <Sparkles className="size-5" />
         </div>
+        {onToggleSidebar ? (
+          <div className="mt-3">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={onToggleSidebar}
+                  aria-label="Expand sidebar"
+                  className="text-muted-foreground"
+                >
+                  <PanelLeftOpen className="size-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="right">Expand sidebar</TooltipContent>
+            </Tooltip>
+          </div>
+        ) : null}
         <div className="mt-5">
           <Tooltip>
             <TooltipTrigger asChild>
@@ -144,9 +167,26 @@ export function ChatSidebar({
         <div className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/15 text-primary ring-1 ring-primary/20">
           <Sparkles className="size-5" />
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-semibold">Sydney</p>
         </div>
+        {onToggleSidebar ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={onToggleSidebar}
+                aria-label="Collapse sidebar"
+                className="shrink-0 text-muted-foreground"
+              >
+                <PanelLeftClose className="size-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Collapse sidebar</TooltipContent>
+          </Tooltip>
+        ) : null}
       </div>
 
       <div className="px-3">
