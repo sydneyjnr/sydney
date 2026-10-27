@@ -27,8 +27,7 @@ export function ChatComposer({
   onSubmit,
   onNewChat,
 }: ChatComposerProps) {
-  const canSubmit =
-    value.trim().length > 0 && !isSending && !isBudgetExhausted;
+  const canSubmit = value.trim().length > 0 && !isSending && !isBudgetExhausted;
   const boundedUsedTokens = Math.min(
     tokenUsage.usedTokens,
     tokenUsage.limitTokens,
@@ -37,9 +36,7 @@ export function ChatComposer({
     tokenUsage.limitTokens > 0
       ? Math.min(
           100,
-          Math.round(
-            (tokenUsage.usedTokens / tokenUsage.limitTokens) * 100,
-          ),
+          Math.round((tokenUsage.usedTokens / tokenUsage.limitTokens) * 100),
         )
       : 0;
 
@@ -103,10 +100,7 @@ export function ChatComposer({
         <div className="mb-2 px-0.5">
           <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
             <span className="font-medium tracking-wide">Token budget</span>
-            <span
-              id="conversation-token-budget"
-              className="tabular-nums"
-            >
+            <span id="conversation-token-budget" className="tabular-nums">
               {formatTokenCount(tokenUsage.usedTokens)} /{" "}
               {formatTokenCount(tokenUsage.limitTokens)} used ·{" "}
               {formatTokenCount(tokenUsage.remainingTokens)} remaining
@@ -171,11 +165,7 @@ export function ChatComposer({
           </div>
         </div>
         <p className="mt-2 text-center text-[11px] text-muted-foreground">
-          Sydney is not always correct. Verify important information.
-        </p>
-        <p className="mt-1 text-center text-[10px] text-muted-foreground/80">
-          Conversation history is sent to the model. Conversations reset on
-          refresh.
+          Sydney is not always correct.
         </p>
       </form>
     </footer>
