@@ -5,6 +5,7 @@ import { CircleAlert, SendHorizontal } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { MAX_MESSAGE_LENGTH } from "@/lib/chat";
 import { formatTokenCount, type TokenUsage } from "@/lib/token-budget";
 import { cn } from "@/lib/utils";
 
@@ -138,7 +139,7 @@ export function ChatComposer({
             aria-label="Message Sydney"
             aria-describedby="conversation-token-budget"
             disabled={isBudgetExhausted}
-            maxLength={4_000}
+            maxLength={MAX_MESSAGE_LENGTH}
             rows={1}
             className="max-h-40 min-h-12 resize-none border-0 bg-transparent px-2.5 py-2.5 text-sm focus-visible:border-transparent focus-visible:ring-transparent dark:bg-transparent"
           />

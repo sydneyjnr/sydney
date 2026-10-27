@@ -27,9 +27,12 @@ import {
 import {
   createChatId,
   getConversationTitle,
+  MAX_MESSAGE_LENGTH,
   normalizeConversationTitle,
   type ChatMessage,
   type Conversation,
+  type EditFeedback,
+  type PendingMessageEdit,
 } from "@/lib/chat";
 import {
   createEmptyTokenUsage,
@@ -51,6 +54,22 @@ class ChatRequestError extends Error {
     this.name = "ChatRequestError";
     this.canRetry = canRetry;
   }
+}
+
+type ReplyHandlers = {
+  onSuccess?: (reply: string) => void;
+  onFailure?: (message: string, canRetry: boolean) => void;
+  onAbort?: () => void;
+};
+
+function removeRecordKey<T>(record: Record<string, T>, key: string) {
+  if (!(key in record)) {
+    return record;
+  }
+
+  const next = { ...record };
+  delete next[key];
+  return next;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -195,6 +214,12 @@ export function ChatShell() {
   >([]);
   const [deleteCandidate, setDeleteCandidate] =
     useState<Conversation | null>(null);
+  const [pendingEdits, setPendingEdits] = useState<
+    Record<string, PendingMessageEdit>
+  >({});
+  const [editFeedback, setEditFeedback] = useState<
+    Record<string, EditFeedback>
+  >({});
   const conversationsRef = useRef<Conversation[]>([]);
   const activeConversationIdRef = useRef<string | null>(null);
   const pendingIdsRef = useRef<Set<string>>(new Set());
@@ -242,6 +267,12 @@ export function ChatShell() {
   const isReplyPending = activeConversation
     ? pendingConversationIds.includes(activeConversation.id)
     : false;
+  const activePendingEdit = activeConversationId
+    ? (pendingEdits[activeConversationId] ?? null)
+    : null;
+  const activeEditFeedback = activeConversationId
+    ? (editFeedback[activeConversationId] ?? null)
+    : null;
 
   const activeTokenUsage =
     activeConversation?.usage ?? createEmptyTokenUsage();
@@ -298,6 +329,7 @@ export function ChatShell() {
     requestMessages: ApiChatMessage[],
     prompt: string,
     userMessageId: string | null,
+    handlers?: ReplyHandlers,
   ) {
     if (pendingIdsRef.current.has(conversationId)) {
       return;
@@ -322,6 +354,10 @@ export function ChatShell() {
       const payload: unknown = await response.json().catch(() => null);
 
       if (controller.signal.aborted || !isMountedRef.current) {
+        if (controller.signal.aborted && isMountedRef.current) {
+          handlers?.onAbort?.();
+        }
+
         return;
       }
 
@@ -343,13 +379,21 @@ export function ChatShell() {
         );
       }
 
-      appendMessage(conversationId, {
-        id: createChatId("message"),
-        role: "assistant",
-        content: reply,
-      });
+      if (handlers?.onSuccess) {
+        handlers.onSuccess(reply);
+      } else {
+        appendMessage(conversationId, {
+          id: createChatId("message"),
+          role: "assistant",
+          content: reply,
+        });
+      }
     } catch (error) {
       if (controller.signal.aborted || !isMountedRef.current) {
+        if (controller.signal.aborted && isMountedRef.current) {
+          handlers?.onAbort?.();
+        }
+
         return;
       }
 
@@ -358,6 +402,11 @@ export function ChatShell() {
       const errorMessage =
         requestError?.message ??
         "Could not reach the AI service. Check your connection and try again.";
+
+      if (handlers?.onFailure) {
+        handlers.onFailure(errorMessage, requestError?.canRetry !== false);
+        return;
+      }
 
       if (requestError && !requestError.canRetry && userMessageId) {
         markMessageExcluded(conversationId, userMessageId);
@@ -447,6 +496,7 @@ export function ChatShell() {
 
     activeConversationIdRef.current = targetId;
     setActiveConversationId(targetId);
+    setEditFeedback((current) => removeRecordKey(current, targetId));
     setDraft("");
     void requestAssistantReply(
       targetId,
@@ -454,6 +504,158 @@ export function ChatShell() {
       content,
       userMessage.id,
     );
+  }
+
+  function handleSaveEdit(
+    conversationId: string,
+    messageId: string,
+    value: string,
+  ) {
+    const content = value.trim();
+
+    if (!content || content.length > MAX_MESSAGE_LENGTH) {
+      return false;
+    }
+
+    if (pendingIdsRef.current.has(conversationId)) {
+      return false;
+    }
+
+    const conversation = conversationsRef.current.find(
+      (item) => item.id === conversationId,
+    );
+
+    if (!conversation || !conversation.usage.canSend) {
+      return false;
+    }
+
+    const messageIndex = conversation.messages.findIndex(
+      (message) => message.id === messageId && message.role === "user",
+    );
+
+    if (messageIndex === -1) {
+      return false;
+    }
+
+    const originalMessage = conversation.messages[messageIndex];
+
+    if (content === originalMessage.content.trim()) {
+      return false;
+    }
+
+    const editedMessages = conversation.messages
+      .slice(0, messageIndex + 1)
+      .map((message) =>
+        message.id === messageId
+          ? { ...message, content, excludeFromHistory: false }
+          : message,
+      );
+    const requestMessages = buildRequestMessages({
+      ...conversation,
+      messages: editedMessages,
+    });
+
+    if (
+      requestMessages.length === 0 ||
+      requestMessages[requestMessages.length - 1].role !== "user"
+    ) {
+      return false;
+    }
+
+    const clearedCount =
+      conversation.messages.length - messageIndex - 1;
+
+    setPendingEdits((current) => ({
+      ...current,
+      [conversationId]: { messageId, content, clearedCount },
+    }));
+    setEditFeedback((current) => removeRecordKey(current, conversationId));
+
+    void requestAssistantReply(
+      conversationId,
+      requestMessages,
+      content,
+      null,
+      {
+        onSuccess: (reply) => {
+          setConversations((current) =>
+            current.map((item) => {
+              if (item.id !== conversationId) {
+                return item;
+              }
+
+              const index = item.messages.findIndex(
+                (message) =>
+                  message.id === messageId && message.role === "user",
+              );
+
+              if (index === -1) {
+                return item;
+              }
+
+              const editedMessage: ChatMessage = {
+                ...item.messages[index],
+                content,
+                excludeFromHistory: false,
+              };
+              const nextMessages: ChatMessage[] = [
+                ...item.messages.slice(0, index),
+                editedMessage,
+                {
+                  id: createChatId("message"),
+                  role: "assistant",
+                  content: reply,
+                },
+              ];
+
+              return {
+                ...item,
+                messages: nextMessages,
+                updatedAt: "Now",
+              };
+            }),
+          );
+          setPendingEdits((current) =>
+            removeRecordKey(current, conversationId),
+          );
+
+          if (clearedCount > 0) {
+            setEditFeedback((current) => ({
+              ...current,
+              [conversationId]: {
+                tone: "info",
+                text: `Edit saved. ${clearedCount} later ${
+                  clearedCount === 1 ? "message was" : "messages were"
+                } cleared so the conversation matches your updated message.`,
+              },
+            }));
+          }
+        },
+        onFailure: (message) => {
+          setPendingEdits((current) =>
+            removeRecordKey(current, conversationId),
+          );
+          setEditFeedback((current) => ({
+            ...current,
+            [conversationId]: {
+              tone: "error",
+              text: `${message} Your original message and later messages were kept.`,
+            },
+          }));
+        },
+        onAbort: () => {
+          setPendingEdits((current) =>
+            removeRecordKey(current, conversationId),
+          );
+        },
+      },
+    );
+
+    return true;
+  }
+
+  function handleDismissEditFeedback(conversationId: string) {
+    setEditFeedback((current) => removeRecordKey(current, conversationId));
   }
 
   function handleRetry(
@@ -547,6 +749,8 @@ export function ChatShell() {
 
     const conversationId = conversation.id;
     abortControllersRef.current.get(conversationId)?.abort();
+    setPendingEdits((current) => removeRecordKey(current, conversationId));
+    setEditFeedback((current) => removeRecordKey(current, conversationId));
 
     const current = conversationsRef.current;
     const deletedIndex = current.findIndex(
@@ -612,9 +816,18 @@ export function ChatShell() {
         <main className="min-h-0 flex-1 overflow-hidden">
           {activeConversation ? (
             <ConversationView
+              key={activeConversation.id}
               conversation={activeConversation}
               isPending={isReplyPending}
+              pendingEdit={activePendingEdit}
+              editFeedback={activeEditFeedback}
               onRetry={handleRetry}
+              onEditMessage={(messageId, content) =>
+                handleSaveEdit(activeConversation.id, messageId, content)
+              }
+              onDismissEditFeedback={() =>
+                handleDismissEditFeedback(activeConversation.id)
+              }
             />
           ) : (
             <div className="h-full overflow-y-auto">

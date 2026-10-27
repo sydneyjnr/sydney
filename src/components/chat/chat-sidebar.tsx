@@ -146,9 +146,6 @@ export function ChatSidebar({
         </div>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">Sydney</p>
-          <p className="truncate text-xs text-muted-foreground">
-            A calmer place to think
-          </p>
         </div>
       </div>
 

@@ -19,6 +19,18 @@ export type Conversation = {
   usage: TokenUsage;
 };
 
+export type PendingMessageEdit = {
+  messageId: string;
+  content: string;
+  clearedCount: number;
+};
+
+export type EditFeedback = {
+  tone: "info" | "error";
+  text: string;
+};
+
+export const MAX_MESSAGE_LENGTH = 4_000;
 export const MAX_CONVERSATION_TITLE_LENGTH = 80;
 
 export const starterPrompts = [
