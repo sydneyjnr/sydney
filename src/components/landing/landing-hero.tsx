@@ -50,7 +50,7 @@ export function LandingHero() {
               className="h-11 w-full rounded-full px-5 text-sm shadow-lg shadow-primary/20 sm:w-auto"
             >
               <Link href="/chat">
-                Start Now
+                Open chat
                 <ArrowRight
                   className="size-4 transition-transform duration-200 group-hover/button:translate-x-0.5 motion-reduce:transition-none"
                   aria-hidden="true"
