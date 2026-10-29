@@ -143,16 +143,6 @@
   }
 }
 
-@keyframes landing-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-7px);
-  }
-}
-
 .animate-caret {
   animation: caret-blink 1.1s step-end infinite;
 }
