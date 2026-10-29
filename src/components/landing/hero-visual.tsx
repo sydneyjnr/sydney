@@ -1,9 +1,7 @@
-import { Sparkles } from "lucide-react";
-
 const prompts = [
-  "Explain it like I'm new.",
+  "Explain how heat pumps work.",
   "Turn these notes into a plan.",
-  "Help me find the right words.",
+  "Make this email more concise.",
 ];
 
 export function HeroVisual() {
@@ -14,18 +12,14 @@ export function HeroVisual() {
     >
       <div className="pointer-events-none absolute -top-16 -right-12 size-56 rounded-full bg-primary/10 blur-3xl dark:bg-primary/10" />
       <div className="pointer-events-none absolute -bottom-20 -left-16 size-48 rounded-full bg-accent/60 blur-3xl dark:bg-accent/20" />
-      <Sparkles
-        className="pointer-events-none absolute -top-10 -right-4 size-36 text-primary/5 dark:text-primary/10"
-        strokeWidth={0.75}
-      />
 
       <div className="relative">
         <div className="flex items-center gap-3">
-          <span className="flex size-8 items-center justify-center rounded-full bg-primary/10 text-ring ring-1 ring-primary/15">
-            <Sparkles className="size-3.5" />
+          <span className="flex h-8 w-8 items-center justify-center">
+            <span className="h-px w-5 bg-primary/50" />
           </span>
           <p className="text-[10px] font-medium tracking-[0.22em] text-muted-foreground uppercase">
-            A few ways to begin
+            Example prompts
           </p>
         </div>
 
@@ -46,7 +40,7 @@ export function HeroVisual() {
         </div>
 
         <p className="mt-5 text-[11px] leading-5 text-muted-foreground">
-          Ask in your own words. Sydney will meet you there.
+          These are examples. Ask in your own words.
         </p>
       </div>
     </div>
